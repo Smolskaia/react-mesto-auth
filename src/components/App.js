@@ -12,6 +12,16 @@ import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
 
+import { Route, Routes } from "react-router-dom";
+
+import Login from "./Login";
+import Register from "./Register";
+import InfoTooltip from "./InfoTooltip";
+import ProtectedRoute from "./ProtectedRoute";
+
+import fail from "../images/popup-fail-reg.svg";
+import success from "../images/popup-success-reg.svg"
+
 function App() {
   // Объявляем новые переменные состояния попапов.
   // Аргумент useState — это начальное состояние.
@@ -26,6 +36,12 @@ function App() {
   const [cards, setCards] = useState([]);
   // переменная состояния currentUser
   const [currentUser, setCurrentUser] = useState({});
+
+  //
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
+  const [infoTooltipStatus, setInfoTooltipStatus] = useState(false);
 
   // эффект при монтировании, который будет вызывать
   // api.getUserInfo и обновлять стейт-переменную currentUser
@@ -61,33 +77,39 @@ function App() {
     setIsEditAvatarPopupOpen(false);
     setIsAddPlacePopupOpen(false);
     setSelectedCard({});
+    setIsInfoTooltipOpen(false);
   }
 
   // Создаем переменную isOpen снаружи useEffect, в которой следим за всеми состояниями попапов.
-  const isOpen = isEditAvatarPopupOpen || isEditProfilePopupOpen || isAddPlacePopupOpen || selectedCard.link
+  const isOpen =
+    isEditAvatarPopupOpen ||
+    isEditProfilePopupOpen ||
+    isAddPlacePopupOpen ||
+    selectedCard.link;
 
   useEffect(() => {
     /* Объявляем функцию внутри useEffect, 
     чтобы она не теряла свою ссылку при обновлении компонента. */
     function closeByEscape(evt) {
-      if(evt.key === 'Escape') {
+      if (evt.key === "Escape") {
         closeAllPopups();
       }
     }
-    
+
     /* Если хоть одно состояние isOpen true или не null, 
     то какой-то попап открыт, значит, нужно навешивать обработчик. */
-    if(isOpen) { // навешиваем только при открытии
-      document.addEventListener('keydown', closeByEscape);
-    /*удаляем обработчик в clean up функции через return */  
+    if (isOpen) {
+      // навешиваем только при открытии
+      document.addEventListener("keydown", closeByEscape);
+      /*удаляем обработчик в clean up функции через return */
       return () => {
-        document.removeEventListener('keydown', closeByEscape);
-      }
+        document.removeEventListener("keydown", closeByEscape);
+      };
     }
-  }, [isOpen]) /*массив зависимостей c isOpen, чтобы отслеживать изменение 
+  }, [isOpen]); /*массив зависимостей c isOpen, чтобы отслеживать изменение 
   этого показателя открытости. Как только он становится true, 
   то навешивается обработчик, когда в false, тогда удаляется обработчик.*/
-  
+
   /*переменная для отслеживания состояния загрузки во время 
   ожидания ответа от сервера*/
   const [isLoading, setIsLoading] = React.useState(false);
@@ -98,21 +120,23 @@ function App() {
     const isLiked = card.likes.some((user) => user._id === currentUser._id);
 
     // Отправляем запрос в API и получаем обновлённые данные карточки
-    api.changeLikeCardStatus(card._id, !isLiked)
+    api
+      .changeLikeCardStatus(card._id, !isLiked)
       .then((newCard) => {
-      // меняем стейт карточек. Поочередно сравниваем id каждой карточки с id карточки
-      // на которой нажали лайк, если id совпадают, тогда обновить карточку с метода api
-      // если нет - оставь текущущую карточку
-      setCards((state) =>
-        state.map((item) => (item._id === card._id ? newCard : item))
-      );
-    })
-    .catch((err) => console.log(err));
+        // меняем стейт карточек. Поочередно сравниваем id каждой карточки с id карточки
+        // на которой нажали лайк, если id совпадают, тогда обновить карточку с метода api
+        // если нет - оставь текущущую карточку
+        setCards((state) =>
+          state.map((item) => (item._id === card._id ? newCard : item))
+        );
+      })
+      .catch((err) => console.log(err));
   }
 
   // удаление карточки
   function handleCardDelete(card) {
-    api.deleteCard(card._id)
+    api
+      .deleteCard(card._id)
       .then(() =>
         setCards((state) => state.filter((item) => item._id !== card._id))
       )
@@ -121,7 +145,8 @@ function App() {
   // изменение данных пользователя
   function handleUpdateUser(inputData) {
     setIsLoading(true);
-    api.setUserInfo(inputData)
+    api
+      .setUserInfo(inputData)
       .then((res) => {
         setCurrentUser(res);
         closeAllPopups();
@@ -133,7 +158,8 @@ function App() {
   // изменение аватара
   function handleUpdateAvatar(inputData) {
     setIsLoading(true);
-    api.setAvatar(inputData)
+    api
+      .setAvatar(inputData)
       .then((res) => {
         setCurrentUser(res);
         closeAllPopups();
@@ -145,7 +171,8 @@ function App() {
   // добавление карточки
   function handleAddPlaceSubmit(inputData) {
     setIsLoading(true);
-    api.addNewCard(inputData)
+    api
+      .addNewCard(inputData)
       .then((res) => {
         setCards([res, ...cards]);
         closeAllPopups();
@@ -159,15 +186,33 @@ function App() {
       <div className="page">
         <div className="page__container">
           <Header />
-          <Main
-            onEditProfile={handleEditProfileClick}
-            onEditAvatar={handleEditAvatarClick}
-            onAddPlace={handleAddPlaceClick}
-            onCardClick={setSelectedCard}
-            onCardLike={handleCardLike}
-            onCardDelete={handleCardDelete}
-            cards={cards}
-          />
+
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute
+                  loggedIn={loggedIn}
+                  element={Main}
+                  cards={cards}
+                  onEditProfile={handleEditProfileClick}
+                  onEditAvatar={handleEditAvatarClick}
+                  onAddPlace={handleAddPlaceClick}
+                  onCardClick={setSelectedCard}
+                  onCardLike={handleCardLike}
+                  onCardDelete={handleCardDelete}
+                />
+              }
+            />
+            <Route
+              path="/sign-up"
+              element={<Register />}
+            />
+            <Route
+              path="/sign-in"
+              element={<Login />}
+            />
+          </Routes>
 
           <Footer />
 
@@ -202,6 +247,13 @@ function App() {
             title="Вы уверены?"
             btnText="Да"
           /> */}
+
+          <InfoTooltip
+            onClose={closeAllPopups}
+            isOpen={isInfoTooltipOpen}
+            title={"Вы успешно зарегистрировались!"}
+            image={success}
+          />
 
         </div>
       </div>
