@@ -5,7 +5,7 @@ import * as auth from '../utils/auth'
 // import ProtectedRoute from "./ProtectedRoute";
 
 function Login(props) {
-  const { handleLogin } = props;
+  const { onLogin } = props;
   
   const [formValue, setFormValue] = useState({
     email: '',
@@ -14,7 +14,7 @@ function Login(props) {
 
   const [ errorMassage, setErrorMessage ] = useState('');
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   // const location = useLocation()
 
   // // функция проверки токена
@@ -49,24 +49,30 @@ function Login(props) {
     });
   }
 
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const { email, password } = formValue
+  //   // здесь обработчик авторизации
+  //   auth.authorize(email, password)
+  //   .then(data => {
+  //     // console.log(email)
+  //     if (data.token) {
+  //       localStorage.setItem('token', data.token)
+  //       onLogin(email)
+  //       navigate('/')
+  //     }
+    
+  //   })
+  //   .catch(err => {
+  //     console.log(err)
+  //     setErrorMessage(err)
+  //   })
+  // }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const { email, password } = formValue
-    // здесь обработчик регистрации
-    auth.authorize(email, password)
-    .then(data => {
-      // console.log(email)
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        handleLogin(email)
-        navigate('/')
-      }
-    
-    })
-    .catch(err => {
-      console.log(err)
-      setErrorMessage(err)
-    })
+    onLogin(email, password)
   }
 
   

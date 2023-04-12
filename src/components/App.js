@@ -45,8 +45,14 @@ function App() {
   в зависимости от статуса пользователя*/
   const [loggedIn, setLoggedIn] = useState(false);
 
-  //переменная состояния для хранения данных пользователя
+  //переменная состояния для хранения email пользователя 
+  // (чтобы потом отображать email в хедере)
   const [ email, setEmail ] = useState("")
+
+  // переменные состояния для попапов успеной регистрации и ошибок входа и регистрации
+  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
+  const [infoTooltipStatus, setInfoTooltipStatus] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('')
 
   const navigate = useNavigate();
 
@@ -56,6 +62,45 @@ function App() {
     setLoggedIn(true);
     setEmail(email)
   };
+
+
+  const handleSubmitLogin = (email, password) => {
+    // обработчик авторизации
+    auth.authorize(email, password)
+    .then(data => {
+      // console.log(email)
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        navigate('/')
+      }
+    })
+    .catch(err => {
+      setIsInfoTooltipOpen(true);
+      setInfoMessage('Что-то пошло не так! Попробуйте ещё раз.')
+      setInfoTooltipStatus(false)
+      console.log(err)
+    })
+  }
+
+////////////////////////
+
+  const handleSubmitRegister = (email, password) => {
+    // здесь обработчик регистрации
+    auth.register(email, password)
+    .then(data => {
+      // console.log(data)
+      setIsInfoTooltipOpen(true);
+      setInfoMessage('Вы успешно зарегистрировались!');
+      setInfoTooltipStatus(true);
+      navigate('/sign-in');
+    })
+    .catch(err => {
+      setIsInfoTooltipOpen(true);
+      setInfoMessage('Что-то пошло не так! Попробуйте ещё раз.')
+      setInfoTooltipStatus(false)
+      console.log(err)
+    })
+  }
 
   // функция проверки токена
   const tokenCheck =() => {
@@ -71,14 +116,13 @@ function App() {
         navigate('/')
       }
     })
+    .catch((err) => console.log(err));
   }
 
   useEffect(() => {
     tokenCheck()
   }, [])
 
-  const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
-  const [infoTooltipStatus, setInfoTooltipStatus] = useState(false);
 
   // эффект при монтировании, который будет вызывать
   // api.getUserInfo и обновлять стейт-переменную currentUser
@@ -243,11 +287,11 @@ function App() {
             />
             <Route
               path="/sign-up"
-              element={<Register />}
+              element={<Register onRegister={handleSubmitRegister} />}
             />
             <Route
               path="/sign-in"
-              element={<Login handleLogin={handleLogin} />}
+              element={<Login onLogin={handleSubmitLogin} />}
             />
             <Route
               path="/"
@@ -308,8 +352,8 @@ function App() {
           <InfoTooltip
             onClose={closeAllPopups}
             isOpen={isInfoTooltipOpen}
-            title={"Вы успешно зарегистрировались!"}
-            image={success}
+            title={infoMessage}
+            image={infoTooltipStatus ? success : fail}
           />
         </div>
       </div>
