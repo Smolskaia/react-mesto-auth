@@ -1,7 +1,7 @@
 // компонент модального окна,который информирует пользователя об успешной (или не очень) регистрации
 import React from "react";
 
-function InfoTooltip({ isOpen, onClose, image, title }) {
+function InfoTooltip({  image, title, isOpen, onClose, }) {
   return (
     <div className={`popup popup__infoTooltip ${isOpen ? "popup_opened" : ""}`}>
       <div className="popup__container">

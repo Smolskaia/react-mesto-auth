@@ -12,7 +12,9 @@ import EditProfilePopup from "./EditProfilePopup";
 import EditAvatarPopup from "./EditAvatarPopup";
 import AddPlacePopup from "./AddPlacePopup";
 
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
+
+import * as auth from '../utils/auth'
 
 import Login from "./Login";
 import Register from "./Register";
@@ -20,7 +22,7 @@ import InfoTooltip from "./InfoTooltip";
 import ProtectedRoute from "./ProtectedRoute";
 
 import fail from "../images/popup-fail-reg.svg";
-import success from "../images/popup-success-reg.svg"
+import success from "../images/popup-success-reg.svg";
 
 function App() {
   // Объявляем новые переменные состояния попапов.
@@ -37,8 +39,43 @@ function App() {
   // переменная состояния currentUser
   const [currentUser, setCurrentUser] = useState({});
 
-  //
+  /* переменная содержит статус пользователя — вошёл он в систему или нет. 
+  Начальное значение этой переменной false.
+  Затем значение переменной подставляется динамически 
+  в зависимости от статуса пользователя*/
   const [loggedIn, setLoggedIn] = useState(false);
+
+  //переменная состояния для хранения данных пользователя
+  const [ email, setEmail ] = useState("")
+
+  const navigate = useNavigate();
+
+  // обработчик логина который будет вызывать setLoggedIn(true),
+  // т е менять состояние переменной loggedIn на true
+  const handleLogin = (email) => {
+    setLoggedIn(true);
+    setEmail(email)
+  };
+
+  // функция проверки токена
+  const tokenCheck =() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      return
+    }
+    auth.checkToken(token)
+    .then(res => {
+      if (res) {
+        handleLogin(res.data.email)
+        // console.log(res);
+        navigate('/')
+      }
+    })
+  }
+
+  useEffect(() => {
+    tokenCheck()
+  }, [])
 
   const [isInfoTooltipOpen, setIsInfoTooltipOpen] = useState(false);
   const [infoTooltipStatus, setInfoTooltipStatus] = useState(false);
@@ -185,15 +222,15 @@ function App() {
     <CurrentUserContext.Provider value={currentUser}>
       <div className="page">
         <div className="page__container">
-          <Header />
+          <Header email={email}/>
 
           <Routes>
             <Route
               path="/"
               element={
                 <ProtectedRoute
-                  loggedIn={loggedIn}
                   element={Main}
+                  loggedIn={loggedIn}
                   cards={cards}
                   onEditProfile={handleEditProfileClick}
                   onEditAvatar={handleEditAvatarClick}
@@ -210,7 +247,27 @@ function App() {
             />
             <Route
               path="/sign-in"
-              element={<Login />}
+              element={<Login handleLogin={handleLogin} />}
+            />
+            <Route
+              path="/"
+              element={
+                loggedIn ? (
+                  <Navigate
+                    to="/"
+                    replace
+                  />
+                ) : (
+                  <Navigate
+                    to="/sign-in"
+                    replace
+                  />
+                )
+              }
+            />
+            <Route
+              path="*"
+              element={<h1>NOT FOUND</h1>}
             />
           </Routes>
 
@@ -254,7 +311,6 @@ function App() {
             title={"Вы успешно зарегистрировались!"}
             image={success}
           />
-
         </div>
       </div>
     </CurrentUserContext.Provider>

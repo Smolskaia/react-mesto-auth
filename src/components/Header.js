@@ -1,7 +1,18 @@
 import React from "react";
 import logo from "../images/header-logo.svg";
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
-function Header() {
+function Header(props) {
+  const { email } = props;
+
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  function signOut() {
+    localStorage.removeItem('token');
+    navigate('/sign-in');
+  }
+
   return (
     <header className="header">
       <img
@@ -10,10 +21,14 @@ function Header() {
         alt="Логотип проекта Место"
       />
       <div className="header__wrapper">
-        <p className="header__mail">aaa@mail.ru</p>
-        <a to="/sign-in" className="header__link">Регистрация</a>
-        <a to="/sign-in" className="header__link">Войти</a>
-        <a to="/sign-in" className="header__link">Выйти</a>
+        {pathname === '/' && <p className="header__mail">{email}</p>}
+        {pathname === '/sign-in' && <Link to="/sign-up" className="header__link">Регистрация</Link>}
+        {pathname === '/sign-up' && <Link to="/sign-in" className="header__link">Войти</Link>}
+        {pathname === '/' && <Link 
+        to="/sign-in" 
+        className="header__link"
+        onClick={signOut}
+        >Выйти</Link>}
       </div>
     </header>
   );
