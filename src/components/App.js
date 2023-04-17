@@ -68,7 +68,9 @@ function App() {
     // обработчик авторизации
     auth.authorize(email, password)
     .then(data => {
+      // console.log(data)
       // console.log(email)
+      handleLogin(email);
       if (data.token) {
         localStorage.setItem('token', data.token)
         navigate('/')
@@ -112,7 +114,7 @@ function App() {
     .then(res => {
       if (res) {
         handleLogin(res.data.email)
-        // console.log(res);
+        // console.log(res.data.email);
         navigate('/')
       }
     })

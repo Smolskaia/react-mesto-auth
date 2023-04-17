@@ -12,7 +12,7 @@ function Header(props) {
     localStorage.removeItem('token');
     navigate('/sign-in');
   }
-
+  // console.log(email);
   return (
     <header className="header">
       <img
